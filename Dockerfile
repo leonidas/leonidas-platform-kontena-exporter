@@ -1,14 +1,15 @@
 FROM node:8
-RUN groupadd smsgw && useradd -g smsgw smsgw
-COPY package.json yarn.lock /usr/src/app/
+RUN groupadd platform && useradd -g platform platform
+COPY package.json package-lock.json /usr/src/app/
 WORKDIR /usr/src/app
-RUN yarn install --pure-lockfile && chmod -R ugo+r node_modules && rm -rf /root/.yarn-cache
-COPY index.js tsconfig.json /usr/src/app/
+RUN npm install
+COPY tsconfig.json /usr/src/app/
 COPY src/ /usr/src/app/src
-USER smsgw
+RUN npm run build
+USER platform
 EXPOSE 3000
 
 # to make it reachable from outside container
-ENV SMSGW_LISTEN_ADDRESS=0.0.0.0
+ENV KONTENA_EXPORTER_LISTEN_ADDRESS=0.0.0.0
 
-CMD ["node", "index.js"]
+CMD ["node", "build/index.js"]

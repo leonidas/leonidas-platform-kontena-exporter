@@ -1,70 +1,33 @@
-stack: santtu-pajukanta-leonidas/smsgw
+stack: santtu-pajukanta-leonidas/kontena-exporter
 version: '0.1.0'
 
 variables:
-  smsgw_session_key:
-    type: string
-    from:
-      vault: ${STACK}_session_key
-      random_string: 63
-    to:
-      vault: ${STACK}_session_key
-
-  smsgw_admin_password:
-    type: string
-    from:
-      vault: ${STACK}_admin_password
-      random_string: 63
-    to:
-      vault: ${STACK}_admin_password
-
-  smsgw_prometheus_password:
+  prometheus_password:
     type: string
     from:
       vault: ${STACK}_prometheus_password
       random_string: 63
     to:
       vault: ${STACK}_prometheus_password
-
-  smsgw_user_password:
-    type: string
-    from:
-      vault: ${STACK}_user_password
-      random_string: 63
-    to:
-      vault: ${STACK}_user_password
 
 services:
   api:
-    image: registry.plat2.leonidasoy.fi/leonidas-smsgw
+    image: registry.plat2.leonidasoy.fi/leonidas-platform-kontena-exporter
     instances: 1
     secrets:
-      - name: SMSGW_LABYRINTTI_PASSWORD
-        secret: smsgw_labyrintti_password
-        type: env
-      - name: SMSGW_LABYRINTTI_USERNAME
-        secret: smsgw_labyrintti_username
+      - secret: KONTENA_MASTER_ACCESS_TOKEN
+        name: KONTENA_EXPORTER_ACCESS_TOKEN
         type: env
     environment:
       NODE_ENV: production
-      SMSGW_DEFAULT_BACKEND: labyrintti
-      SMSGW_REDIS_HOST: redis
-      SMSGW_SESSION_KEY: ${smsgw_session_key}
-      SMSGW_INITIAL_ADMIN_PASSWORD: ${smsgw_admin_password}
-      SMSGW_INITIAL_PROMETHEUS_PASSWORD: ${smsgw_prometheus_password}
-      SMSGW_INITIAL_USER_PASSWORD: ${smsgw_user_password}
-      # SMSGW_LOG_LEVEL: debug
+      KONTENA_EXPORTER_PASSWORD: ${prometheus_password}
 
       KONTENA_LB_MODE: http
       KONTENA_LB_BALANCE: roundrobin
       KONTENA_LB_INTERNAL_PORT: 3000
-      KONTENA_LB_VIRTUAL_HOSTS: smsgw.leonidasoy.fi
+      KONTENA_LB_VIRTUAL_HOSTS: kontena-exporter.plat2.leonidasoy.fi
       KONTENA_LB_CUSTOM_SETTINGS: |
         redirect scheme https if !{ ssl_fc }
         http-response set-header Strict-Transport-Security max-age=16000000;\ includeSubDomains;\ preload;
     links:
       - platform/lb1
-      - redis
-  redis:
-    image: redis
-    stateful: true

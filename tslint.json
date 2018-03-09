@@ -98,6 +98,7 @@
         "only-arrow-functions": [ false ],
         "prefer-object-spread": false,
         "object-literal-sort-keys": false,
-        "ordered-imports": [ false ]
+        "ordered-imports": [ false ],
+        "max-classes-per-file": false,
     }
 }

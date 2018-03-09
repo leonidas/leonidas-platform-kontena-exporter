@@ -1,18 +1,12 @@
 import * as Koa from 'koa';
-import * as bodyParser from 'koa-bodyparser';
-import * as convert from 'koa-convert';
-import * as session from 'koa-generic-session';
 import * as passport from 'koa-passport';
 import * as KoaRouter from 'koa-router';
 
 
 import Config from './Config';
 import router from './controllers';
-import validationMiddleware from './middleware/validation';
 import setupPassport from './middleware/authentication';
 import Logger, { requestLogger } from './services/Logger';
-import RedisStore from './services/RedisStore';
-import { ensureInitialUsers } from './models/User';
 
 
 export type Context = Koa.Context & KoaRouter.IRouterContext & passport.Context;
@@ -27,15 +21,10 @@ async function notFound(ctx: Context) {
 
 export function makeApp(): Koa {
   const theApp = new Koa();
-  theApp.keys = [Config.session.key];
+
   setupPassport();
 
   theApp.use(requestLogger);
-  theApp.use(validationMiddleware);
-  theApp.use(bodyParser());
-  theApp.use(convert(session({
-    store: RedisStore,
-  })));
   theApp.use(passport.initialize());
   theApp.use(passport.session());
   theApp.use(router.routes());
@@ -52,12 +41,16 @@ export default app;
 export function getServer(config: Config = Config) {
   const { address, port } = config.listen;
 
-  Logger.info(`Starting smsgw at ${address}:${port}`, config);
+  Logger.info(`Starting kontena-exporter at ${address}:${port}`, config);
   return app.listen(port, address);
 }
 
 
-export async function start() {
-  await ensureInitialUsers();
+export function start() {
   return getServer();
+}
+
+
+if (require.main === module) {
+  start();
 }

@@ -13,7 +13,7 @@ type Logger = winston.LoggerInstance;
 export function makeLogger(level: winston.CLILoggingLevel = Config.logLevel): Logger {
   const newLogger = new winston.Logger({ level });
 
-  newLogger.add(winston.transports.Console, consoleFormatter.config());
+  newLogger.add(winston.transports.Console, consoleFormatter());
 
   return newLogger;
 }

@@ -1,12 +1,12 @@
 import * as assert from 'assert';
-import { message, request, send } from '../helpers/test';
-import { testUsers, NewUser } from '../models/User';
+import { request } from '../helpers/test';
+import Config from '../Config';
 
 
-function getMetrics(user: NewUser = testUsers.prometheus) {
+function getMetrics(config: Config = Config) {
   return request()
     .get('/metrics')
-    .auth(user.username, user.password)
+    .auth(config.user.username, config.user.password)
     .expect(200);
 }
 
@@ -14,17 +14,9 @@ function getMetrics(user: NewUser = testUsers.prometheus) {
 describe('/metrics', () => {
   describe('GET', () => {
     it('returns Prometheus metrics', async () => {
-      await send(message);
-      await send(message);
-
       const response = await getMetrics();
-
-      assert(response.text.indexOf('smsgw_messages{customer0="leonidas", customer1="platform"} 2') >= 0);
-    });
-
-    it('shall work even if there are no messages', async () => {
-      const response = await getMetrics();
-      assert(response.text.indexOf('smsgw_messages{customer0="leonidas"} 0') >= 0);
+      console.log(response.text);
+      assert(response.text.indexOf('certificate_validity_seconds{subject="leonidasoy.fi"} 1749873') >= 0);
     });
   });
 });

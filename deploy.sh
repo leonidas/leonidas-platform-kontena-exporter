@@ -2,4 +2,4 @@
 set -xue
 docker-compose build
 docker-compose push
-kontena stack upgrade --deploy smsgw kontena.yml
+kontena stack upgrade --deploy kontena-exporter kontena.yml

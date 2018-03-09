@@ -1,26 +1,30 @@
-/**
- * Splits customer ID into Prometheus labels, eg. 'leonidas.platform' -> 'customer0="leonidas", customer1="platform"'
- * @param customer Dotted-path customer ID
- */
-export function makeCustomerLabels(customer: string): string {
-  return customer.split('.')
-    .map((customerPart, index) => `customer${index}="${customerPart}"`)
-    .join(', ');
+import { Certificate } from '../services/Kontena';
+import {ZonedDateTime, ChronoUnit, Clock } from 'js-joda';
+import Config from '../Config';
+
+
+function getNow(config: Config = Config) {
+  if (config.nodeEnv === 'test') {
+    return ZonedDateTime.parse('2018-03-09T13:13:13.000+02:00');
+  } else {
+    return ZonedDateTime.now(Clock.systemDefaultZone());
+  }
 }
 
 
-export default function formatMetrics(results: { [customer: string]: string }) {
-  const lines = [
-    '# HELP smsgw_messages Sent SMS messages by customer',
-    '# TYPE smsgw_messages counter',
-  ];
+function getValidity(certificate: Certificate, now: ZonedDateTime): number {
+  const validUntil = ZonedDateTime.parse(certificate.valid_until);
 
-  Object.keys(results).forEach((customer) => {
-    const value = results[customer];
-    const customerLabels = makeCustomerLabels(customer);
+  return now.until(validUntil, ChronoUnit.SECONDS);
+}
 
-    lines.push(`smsgw_messages{${customerLabels}} ${value}`);
-  });
 
-  return lines.join('\n') + '\n';
+export default function formatMetrics(certificates: Certificate[], now?: ZonedDateTime) {
+  const _now: ZonedDateTime = now || getNow();
+
+  return [
+    '# HELP certificate_validity_seconds Amount of seconds the certificate will still be valid for',
+    '# TYPE certificate_validity_seconds gauge',
+    ...certificates.map(certificate => `certificate_validity_seconds{subject="${certificate.subject}"} ${getValidity(certificate, _now)}`),
+  ].join('\n') + '\n';
 };
